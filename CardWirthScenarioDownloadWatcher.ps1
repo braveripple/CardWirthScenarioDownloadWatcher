@@ -12,8 +12,6 @@ $WATCH_DIRECTORY_PATH = "$HOME/Downloads"
 $CARDWIRTH_SCENARIO_DIRECTORY_PATH = "$HOME/CardWirthPy/Scenario/新着シナリオ/"
 $CARDWIRTHNEXT_SCENARIO_DIRECTORY_PATH = "$HOME/CardWirthNext/Scenario/新着シナリオ/"
 
-$TIMER_INTERVAL = 3 * 1000 # timer_function実行間隔(ミリ秒)
-
 $MUTEX_NAME = '0b72e703-1de1-4320-ae81-d7c48257e460: ' + [System.BitConverter]::ToString([System.BitConverter]::GetBytes($ARGB));
 $mutex = New-Object System.Threading.Mutex($false, $MUTEX_NAME);
 
@@ -87,10 +85,9 @@ function displayTooltip {
                 $timer.Stop()
                 # 出力を捨てる
                 Write-Output "タイマーイベント" > $null
-                $timer.Interval = $TIMER_INTERVAL
                 $timer.Start()
             })
-        $timer.Interval = 1
+        $timer.Interval = 1000
         $timer.Start()
 
         # FileSystemWatcherの作成
