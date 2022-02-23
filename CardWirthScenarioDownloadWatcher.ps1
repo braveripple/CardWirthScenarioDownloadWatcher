@@ -28,33 +28,34 @@ function displayTooltip {
         $pwshPath = Get-Process -id $pid | Select-Object -ExpandProperty Path
         $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($pwshPath)    
         $notifyIcon = [System.Windows.Forms.NotifyIcon]@{
-            Icon = $icon;
-            Text = "CardWirthScenario DownloadWatcher";
+            Icon           = $icon;
+            Text           = "CardWirthScenario DownloadWatcher";
             BalloonTipIcon = 'None';
         };
 
         ####################################################
         # アイコン左クリック時のイベントを設定
         ####################################################
-        $notifyIcon.add_Click({
-            if ($_.Button -eq [System.Windows.Forms.MouseButtons]::Left) {
-                try {
-                    $notifyIcon.BalloonTipText = (Get-Date);
-                    $notifyIcon.ShowBalloonTip(5000);
-                } catch {
-                    $notifyIcon.BalloonTipText = $_.ToString();
-                    $notifyIcon.ShowBalloonTip(5000);
+        $notifyIcon.add_Click( {
+                if ($_.Button -eq [System.Windows.Forms.MouseButtons]::Left) {
+                    try {
+                        $notifyIcon.BalloonTipText = (Get-Date);
+                        $notifyIcon.ShowBalloonTip(5000);
+                    }
+                    catch {
+                        $notifyIcon.BalloonTipText = $_.ToString();
+                        $notifyIcon.ShowBalloonTip(5000);
+                    }
                 }
-            }
-        });
+            });
 
         ####################################################
         # アイコン右クリック時のコンテキストメニューの設定
         ####################################################
         $menuItem_exit = [System.Windows.Forms.ToolStripMenuItem]@{ Text = 'Exit' };
-        $menuItem_openFolder1 = [System.Windows.Forms.ToolStripMenuItem]@{ Text = '監視フォルダを開く' };
-        $menuItem_openFolder2 = [System.Windows.Forms.ToolStripMenuItem]@{ Text = '通常シナリオフォルダを開く' };
-        $menuItem_openFolder3 = [System.Windows.Forms.ToolStripMenuItem]@{ Text = 'Next対応シナリオフォルダを開く' };
+        $menuItem_openFolder1 = [System.Windows.Forms.ToolStripMenuItem]@{ Text = 'ダウンロードフォルダを開く' };
+        $menuItem_openFolder2 = [System.Windows.Forms.ToolStripMenuItem]@{ Text = 'シナリオフォルダを開く' };
+        $menuItem_openFolder3 = [System.Windows.Forms.ToolStripMenuItem]@{ Text = 'Nextシナリオフォルダを開く' };
         
         $notifyIcon.ContextMenuStrip = New-Object System.Windows.Forms.ContextMenuStrip;
         [void]$notifyIcon.ContextMenuStrip.Items.Add($menuItem_openFolder1);
@@ -62,18 +63,18 @@ function displayTooltip {
         [void]$notifyIcon.ContextMenuStrip.Items.Add($menuItem_openFolder3);
         [void]$notifyIcon.ContextMenuStrip.Items.Add($menuItem_exit);
 
-        $menuItem_exit.add_Click({
-            $appContext.ExitThread();
-        });
-        $menuItem_openFolder1.add_Click({
-            Invoke-Item -Path ([WildcardPattern]::Escape($WATCH_DIRECTORY_PATH))
-        });
-        $menuItem_openFolder2.add_Click({
-            Invoke-Item -Path ([WildcardPattern]::Escape($CARDWIRTH_SCENARIO_DIRECTORY_PATH))
-        });
-        $menuItem_openFolder3.add_Click({
-            Invoke-Item -Path ([WildcardPattern]::Escape($CARDWIRTHNEXT_SCENARIO_DIRECTORY_PATH))
-        });
+        $menuItem_exit.add_Click( {
+                $appContext.ExitThread();
+            });
+        $menuItem_openFolder1.add_Click( {
+                Invoke-Item -Path ([WildcardPattern]::Escape($WATCH_DIRECTORY_PATH))
+            });
+        $menuItem_openFolder2.add_Click( {
+                Invoke-Item -Path ([WildcardPattern]::Escape($CARDWIRTH_SCENARIO_DIRECTORY_PATH))
+            });
+        $menuItem_openFolder3.add_Click( {
+                Invoke-Item -Path ([WildcardPattern]::Escape($CARDWIRTHNEXT_SCENARIO_DIRECTORY_PATH))
+            });
 
         ####################################################
         # フォルダ監視の設定
@@ -82,13 +83,13 @@ function displayTooltip {
         # タイマーイベントがないと何故かRegister-ObjectEventが動かないので仕方なく設定している
         $timer = New-Object Windows.Forms.Timer
         $timer.Enabled = $true
-        $timer.Add_Tick({
-            $timer.Stop()
-            # 出力を捨てる
-            Write-Output "タイマーイベント" > $null
-            $timer.Interval = $TIMER_INTERVAL
-            $timer.Start()
-        })
+        $timer.Add_Tick( {
+                $timer.Stop()
+                # 出力を捨てる
+                Write-Output "タイマーイベント" > $null
+                $timer.Interval = $TIMER_INTERVAL
+                $timer.Start()
+            })
         $timer.Interval = 1
         $timer.Start()
 
@@ -114,13 +115,14 @@ function displayTooltip {
                         $Scenario = Get-CardWirthScenario -LiteralPath $f.FullPath
                         write-host "シナリオ名:$($Scenario.Name)"
                         if ($Scenario.ScenarioType.ToString() -ne "Next") {
-                            Write-Host ("通常シナリオフォルダに移動します")
+                            Write-Host ("シナリオフォルダに移動します")
                             Move-Item -LiteralPath $f.FullPath -Destination $Event.MessageData.CardWirthScenarioFolder
-                            Write-Host ("通常シナリオフォルダに移動しました")
+                            Write-Host ("シナリオフォルダに移動しました")
                             $Event.MessageData.notifyIcon.BalloonTipTitle = 'CardWirthシナリオのダウンロード';
-                            $Event.MessageData.notifyIcon.BalloonTipText = "通常シナリオフォルダに移動しました。`nシナリオ名:$($Scenario.Name)`n作者:$($Scenario.Author)";
+                            $Event.MessageData.notifyIcon.BalloonTipText = "シナリオフォルダに移動しました。`nシナリオ名:$($Scenario.Name)`n作者:$($Scenario.Author)";
                             $Event.MessageData.notifyIcon.ShowBalloonTip(5000);
-                        } else {
+                        }
+                        else {
                             Write-Host ("Nextシナリオフォルダに移動します")
                             Move-Item -LiteralPath $f.FullPath -Destination $Event.MessageData.CardWirthNextScenarioFolder
                             Write-Host ("Nextシナリオフォルダに移動しました")
@@ -139,7 +141,8 @@ function displayTooltip {
         [void][System.Windows.Forms.Application]::Run($appContext);
         $notifyIcon.Visible = $false;
     
-    } finally {
+    }
+    finally {
         $notifyIcon.Dispose();
         $mutex.ReleaseMutex();
     }
@@ -161,10 +164,12 @@ try {
         Write-Host "displayTooltip"
         displayTooltip
         $retcode = 0;
-    } else {
+    }
+    else {
         $retcode = 255;
     }
-} finally {
+}
+finally {
     $mutex.Dispose();
 }
 exit $retcode;
