@@ -1,0 +1,2 @@
+# CardWirthScenarioDownloadWatcher
+CardWirthのシナリオダウンロード監視＆フォルダ移動をするスクリプト
